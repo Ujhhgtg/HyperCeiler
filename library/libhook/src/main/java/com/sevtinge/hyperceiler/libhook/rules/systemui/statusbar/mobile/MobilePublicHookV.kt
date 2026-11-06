@@ -45,12 +45,11 @@ import com.sevtinge.hyperceiler.libhook.utils.hookapi.systemui.MobilePrefs.signa
 import com.sevtinge.hyperceiler.libhook.utils.hookapi.systemui.MobileViewHelper
 import com.sevtinge.hyperceiler.libhook.utils.hookapi.systemui.MobileViewHelper.isMobileDataConnected
 import com.sevtinge.hyperceiler.libhook.utils.hookapi.systemui.MobileViewHelper.isWifiConnected
+import io.github.lingqiqi5211.ezhooktool.core.loadClass
+import io.github.lingqiqi5211.ezhooktool.xposed.EzXposed
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.getObjectFieldAs
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.hookAllConstructors
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.setObjectField
-import io.github.lingqiqi5211.ezhooktool.core.loadClass
-import io.github.lingqiqi5211.ezhooktool.xposed.EzXposed
-import io.github.lingqiqi5211.ezhooktool.xposed.common.HookParam
 import java.util.concurrent.ConcurrentHashMap
 
 class MobilePublicHookV : BaseHook() {
@@ -72,58 +71,70 @@ class MobilePublicHookV : BaseHook() {
     override fun init() {
         restoreVisibilityFlowsAfterHotReload()
 
+        hookLegacyVisibility()
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_PHONE_STATE])
+    private fun hookLegacyVisibility() {
         miuiCellularIconVM.hookAllConstructors {
             after { param ->
                 val cellularIcon = param.thisObject
                 val mobileIconInteractor = param.args[2] ?: return@after
                 val subId = mobileIconInteractor.getObjectFieldAs<Int>("subId")
-                val isVisible = createVisibilityFlow()
+                applyVisibility(cellularIcon, subId, param.thisObject)
+            }
+        }
+    }
 
-                when {
-                    // 信号显示逻辑
-                    signalShowMode >= 1 -> {
-                        cellularIcon.setObjectField("isVisible", isVisible)
-                        trackVisibilityFlow(subId, isVisible)
-                        refreshVisibility(subId, isVisible)
-                        registerReceiver(EzXposed.appContext)
-                    }
-                    // 双排信号（signalShowMode == 0 且未隐藏卡）
-                    isEnableDouble && !(card1 || card2) -> {
-                        cellularIcon.setObjectField("isVisible", isVisible)
-                        trackVisibilityFlow(subId, isVisible)
-                        val slotIndex = SubscriptionManager.getSlotIndex(subId)
-                        val shouldShow = !MobileViewHelper.isAirplaneModeOn() &&
-                            (MobileViewHelper.isSingleSimMode() || slotIndex == 0)
-                        updateVisibility(isVisible, shouldShow)
-                        registerReceiver(EzXposed.appContext)
-                    }
-                    // 隐藏指定卡
-                    else -> {
-                        val slotIndex = SubscriptionManager.getSlotIndex(subId)
-                        if ((card1 && slotIndex == 0) || (card2 && slotIndex == 1)) {
-                            cellularIcon.setObjectField("isVisible", isVisible)
-                        }
-                    }
-                }
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_PHONE_STATE])
+    private fun applyVisibility(cellularIcon: Any, subId: Int, thisObject: Any) {
+        val isVisible = createVisibilityFlow()
 
-                if (hideIndicator) {
-                    cellularIcon.setObjectField("inOutVisible", newReadonlyStateFlow(false))
-                }
-                if (hideRoaming) {
-                    // 新版 MiuiCellularIconVM 中 *RoamVisible 字段类型为
-                    // FlowKt__ZipKt$combine$$inlined$combineUnsafe$FlowKt__ZipKt$1
-                    // （combine 产生的匿名 Flow），直接 setObjectField 会抛
-                    // IllegalArgumentException。先尝试旧版直接替换 StateFlow，
-                    // 失败则改为劫持其内部 $transform$inlined$1 lambda 让合并结果恒为 false。
-                    forceRoamHidden(cellularIcon, "smallRoamVisible")
-                    forceRoamHidden(cellularIcon, "mobileRoamVisible")
-                }
-                if (!isMoreSmallVersion(200, 2f)) {
-                    updateIconState(param, "smallHdVisible", "system_ui_status_bar_icon_small_hd")
-                    updateIconState(param, "volteVisibleCn", "system_ui_status_bar_icon_big_hd")
-                    updateIconState(param, "volteVisibleGlobal", "system_ui_status_bar_icon_big_hd")
+        when {
+            // 信号显示逻辑
+            signalShowMode >= 1 -> {
+                cellularIcon.setObjectField("isVisible", isVisible)
+                trackVisibilityFlow(subId, isVisible)
+                refreshVisibility(subId, isVisible)
+                registerReceiver(EzXposed.appContext)
+            }
+            // 双排信号（signalShowMode == 0 且未隐藏卡）
+            isEnableDouble && !(card1 || card2) -> {
+                cellularIcon.setObjectField("isVisible", isVisible)
+                trackVisibilityFlow(subId, isVisible)
+                val slotIndex = SubscriptionManager.getSlotIndex(subId)
+                val shouldShow = !MobileViewHelper.isAirplaneModeOn() &&
+                    (MobileViewHelper.isSingleSimMode() || slotIndex == 0)
+                updateVisibility(isVisible, shouldShow)
+                registerReceiver(EzXposed.appContext)
+            }
+            // 隐藏指定卡
+            else -> {
+                val slotIndex = SubscriptionManager.getSlotIndex(subId)
+                if ((card1 && slotIndex == 0) || (card2 && slotIndex == 1)) {
+                    cellularIcon.setObjectField("isVisible", isVisible)
                 }
             }
+        }
+
+        if (hideIndicator) {
+            runCatching {
+                cellularIcon.setObjectField("inOutVisible", newReadonlyStateFlow(false))
+            }
+        }
+        if (hideRoaming) {
+            // 新版 MiuiCellularIconVM 中 *RoamVisible 字段类型为
+            // FlowKt__ZipKt$combine$$inlined$combineUnsafe$FlowKt__ZipKt$1
+            // （combine 产生的匿名 Flow），直接 setObjectField 会抛
+            // IllegalArgumentException。先尝试旧版直接替换 StateFlow，
+            // 失败则改为劫持其内部 $transform$inlined$1 lambda 让合并结果恒为 false。
+            forceRoamHidden(cellularIcon, "smallRoamVisible")
+            forceRoamHidden(cellularIcon, "mobileRoamVisible")
+        }
+        if (!isMoreSmallVersion(200, 2f)) {
+            updateIconState(thisObject, "smallHdVisible", "system_ui_status_bar_icon_small_hd")
+            updateIconState(thisObject, "volteVisibleCn", "system_ui_status_bar_icon_big_hd")
+            updateIconState(thisObject, "volteVisibleGlobal", "system_ui_status_bar_icon_big_hd")
         }
     }
 
@@ -326,10 +337,12 @@ class MobilePublicHookV : BaseHook() {
         BaseHook.putHotReloadRuntimeState(STATE_CONTEXT, context)
     }
 
-    private fun updateIconState(param: HookParam, fieldName: String, key: String) {
+    private fun updateIconState(thisObject: Any, fieldName: String, key: String) {
         val opt = PrefsBridge.getStringAsInt(key, 0)
         if (opt != 0) {
-            param.thisObject.setObjectField(fieldName, newReadonlyStateFlow(opt == 1))
+            runCatching {
+                thisObject.setObjectField(fieldName, newReadonlyStateFlow(opt == 1))
+            }
         }
     }
 }

@@ -64,7 +64,7 @@ object DockCustomNew : BaseHook() {
     }
 
     private val folderBlurUtilsClass by lazy {
-        findClass("com.miui.home.common.utils.MiuixMaterialBlurUtilities")
+        loadClassOrNull("com.miui.home.common.utils.MiuixMaterialBlurUtilities")
     }
 
 
@@ -105,7 +105,7 @@ object DockCustomNew : BaseHook() {
             val dockBottomMargin = dp2px(PrefsBridge.getInt("home_dock_bg_margin_bottom", 30) - 92)
 
             isSupportHyperMaterialBlur = if (isMoreHyperOSVersion(3f)) {
-                folderBlurUtilsClass.callStaticMethod("isSupportHyperMaterialBlur") as Boolean
+                folderBlurUtilsClass?.callStaticMethod("isSupportHyperMaterialBlur") as? Boolean ?: false
             } else {
                 false
             }
@@ -151,7 +151,7 @@ object DockCustomNew : BaseHook() {
             }.createAfterHook {
 
                 isSupportHyperMaterialBlur = if (isMoreHyperOSVersion(3f)) {
-                    folderBlurUtilsClass.callStaticMethod("isSupportHyperMaterialBlur") as Boolean
+                    folderBlurUtilsClass?.callStaticMethod("isSupportHyperMaterialBlur") as? Boolean ?: false
                 } else {
                     false
                 }
@@ -179,13 +179,7 @@ object DockCustomNew : BaseHook() {
     }
 
     private fun View.addBlur() {
-        val isDarkMode by lazy {
-            if (AppsTool.isDarkMode(context) && PrefsBridge.getStringAsInt("home_other_home_mode", 0) == 0) {
-                AppsTool.isDarkMode(context)
-            } else {
-                PrefsBridge.getStringAsInt("home_other_home_mode", 0) == 2
-            }
-        }
+        val isDarkMode = isDarkDockMode()
 
         clearMiBackgroundBlendColor()
         setMiViewBlurMode(1)
@@ -212,6 +206,14 @@ object DockCustomNew : BaseHook() {
                 addMiBackgroundBlendColor(0x66B4B4B4, 100)
                 addMiBackgroundBlendColor(0xFF2EF200.toInt(), 106)
             }
+        }
+    }
+
+    private fun View.isDarkDockMode(): Boolean {
+        return when (PrefsBridge.getStringAsInt("home_other_home_mode", 0)) {
+            1 -> false
+            2 -> true
+            else -> AppsTool.isDarkMode(context)
         }
     }
 }
