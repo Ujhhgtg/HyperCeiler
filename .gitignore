@@ -22,3 +22,8 @@ tests/lsposed-log-*/
 
 # Python bytecode from the tests/ verification scripts.
 __pycache__/
+
+# Keystores/apks are never committed.
+*.keystore
+*.jks
+*.apk

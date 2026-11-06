@@ -33,7 +33,7 @@ public final class LogcatParserTest {
             [ 1792394363.079041  10123:125:459 I/HyperCeiler ]
             legacy app record already delivered to listener
 
-            [ 1792394363.079042  1000:126:460 W/HomeTweaks ]
+            [ 1792394363.079042  1000:126:460 W/OtherNative ]
             symbol lookup declined
 
             [ 1792394363.079043  1000:126:460 I/OtherApp ]
