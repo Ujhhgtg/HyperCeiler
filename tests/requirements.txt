@@ -1,2 +1,0 @@
-# Secure XML parsing for the stereo preference regression harness.
-defusedxml==0.7.1
