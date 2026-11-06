@@ -40,8 +40,7 @@ final class LogcatParser {
         if (next.matches()) {
             finish();
             String tag = next.group(7).trim();
-            if ((tag.startsWith("HyperCeiler") || HomeLayoutEngineLogNames.isLegacyTag(tag))
-                && !tag.startsWith("HyperCeiler.App.")) current = next;
+            if (tag.startsWith("HyperCeiler") && !tag.startsWith("HyperCeiler.App.")) current = next;
         } else if (current != null && message.length() < MAX_MESSAGE && !line.startsWith("--------- ")) {
             if (hasMessageLine) message.append('\n');
             hasMessageLine = true;
@@ -75,7 +74,7 @@ final class LogcatParser {
             long id = java.nio.ByteBuffer.wrap(bytes).getLong() | Long.MIN_VALUE;
             if (tag.startsWith("HyperCeiler.Raw.")) tag = tag.substring("HyperCeiler.Raw.".length());
             // Keep IDs based on the original event so refresh remains idempotent.
-            consumer.accept(new Entry(id, timestamp, header.group(6), HomeLayoutEngineLogNames.tag(tag), HomeLayoutEngineLogNames.text(text),
+            consumer.accept(new Entry(id, timestamp, header.group(6), tag, text,
                 uid + ':' + header.group(4) + ':' + header.group(5), app));
         } catch (NumberFormatException | ArithmeticException ignored) {
             // An invalid header cannot prevent later records from being imported.

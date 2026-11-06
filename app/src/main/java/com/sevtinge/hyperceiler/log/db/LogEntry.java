@@ -24,7 +24,6 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import com.sevtinge.hyperceiler.log.HomeLayoutEngineLogNames;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -111,11 +110,11 @@ public class LogEntry {
     }
 
     public String getTag() {
-        return HomeLayoutEngineLogNames.tag(tag);
+        return tag;
     }
 
     public String getMessage() {
-        return HomeLayoutEngineLogNames.text(message);
+        return message;
     }
 
     public long getTimestamp() {

@@ -18,27 +18,8 @@ for production_root in (root / 'app/src/main', root / 'library'):
 
 with tempfile.TemporaryDirectory(prefix='hc-logcat-test-') as temp:
     subprocess.run(['javac', '-encoding', 'UTF-8', '-d', temp, str(parser),
-                    str(parser.with_name('HomeLayoutEngineLogNames.java')),
                     str(Path(__file__).with_name('LogcatParserTest.java'))], check=True)
     subprocess.run(['java', '-ea', '-cp', temp, 'com.sevtinge.hyperceiler.log.LogcatParserTest'], check=True)
-
-# Compile the real Room model; only annotation declarations are host stubs.
-with tempfile.TemporaryDirectory(prefix='hc-log-names-') as temp:
-    work = Path(temp)
-    annotations = {
-        'ColumnInfo': 'String name() default ""; String defaultValue() default "";',
-        'Entity': 'String tableName() default ""; Index[] indices() default {};',
-        'Ignore': '', 'Index': 'String[] value();', 'PrimaryKey': 'boolean autoGenerate() default false;'
-    }
-    sources = []
-    for name, body in annotations.items():
-        source = work / (name + '.java')
-        source.write_text('package androidx.room; public @interface ' + name + '{' + body + '}')
-        sources.append(str(source))
-    sources += [str(parser.with_name('HomeLayoutEngineLogNames.java')),
-                str(parser.parent / 'db/LogEntry.java'), str(Path(__file__).with_name('HomeLayoutEngineLogNamesTest.java'))]
-    subprocess.run(['javac', '-encoding', 'UTF-8', '-d', temp] + sources, check=True)
-    subprocess.run(['java', '-ea', '-cp', temp, 'com.sevtinge.hyperceiler.log.HomeLayoutEngineLogNamesTest'], check=True)
 
 # Execute the actual DAO SQL to ensure a LSPosed refresh does not erase imported logs
 # and the existing current-log export includes both sources without schema migration.

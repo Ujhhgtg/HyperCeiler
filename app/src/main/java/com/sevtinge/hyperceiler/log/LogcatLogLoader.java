@@ -32,15 +32,13 @@ final class LogcatLogLoader {
             var prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
             long cutoff = boot.equals(prefs.getString("clear_boot", "")) ? prefs.getLong("cleared_at", 0) : 0;
             List<LogEntry> batch = new ArrayList<>(500);
-            int[] imported = {0, 0}; // all module records, native launcher records
+            int[] imported = {0}; // all module records
             LogcatParser parser = new LogcatParser(boot, Process.myUid(), cutoff, item -> {
                 LogEntry entry = new LogEntry(item.app() ? "App" : "Xposed", item.level(), item.tag(),
                     item.message(), item.timestamp(), SOURCE, item.processIds());
                 // Stable negative IDs cannot collide with Room's positive auto-generated IDs.
                 entry.setId(item.id());
                 imported[0]++;
-                if (item.tag().startsWith("HyperCeiler.Home") || item.tag().equals("HyperCeiler.NativeHome")
-                    || item.tag().equals("HyperCeiler.DockNative")) imported[1]++;
                 batch.add(entry);
                 if (batch.size() == 500) {
                     dao.insertImportedLogs(batch);
@@ -81,11 +79,6 @@ final class LogcatLogLoader {
                     + ". Check Root/logcat availability; the capture may be incomplete.");
             } else {
                 LogSyncDiagnostics.record(dao, "LogSync.Logcat", "I", "LOGCAT_IMPORT_OK: module log capture completed.");
-                LogSyncDiagnostics.record(dao, "LogSync.HomeCoverage", imported[1] == 0 ? "W" : "I",
-                    imported[1] == 0 ? "NO_HOME_RECORDS: No launcher-native diagnostics remain in current logcat buffers. "
-                        + "Check LSPosed launcher scope, restart the launcher, reproduce and refresh promptly. "
-                        + "Startup records may have expired; this alone does not prove that hooks never loaded."
-                        : "HOME_RECORDS_PRESENT: Launcher-native records were found in current logcat buffers.");
             }
             dao.autoTrim();
         } catch (InterruptedException interrupted) {
