@@ -115,7 +115,7 @@ android {
                 keyAlias = getString("keyAlias", "KEY_ALIAS", "Key alias")
                 keyPassword = getString("keyPassword", "KEY_PASSWORD", "Key password")
             }
-            enableV1Signing = true
+            enableV1Signing = false
             enableV2Signing = true
             enableV3Signing = true
             enableV4Signing = true
