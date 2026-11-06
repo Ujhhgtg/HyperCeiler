@@ -44,7 +44,6 @@ public final class StatusBarFollowSystemUi extends SystemUiBarFollowRuntime {
                     session.markInstalled();
                     registerHotReloadCleanup(this::closeBarFollowRuntime);
                 } catch (Throwable failure) {
-                    rollbackStatusbarHooks();
                     moduleLog(LOG_WARN, TAG, "Deferred SystemUI status-bar installation failed", failure);
                     session.close();
                 }
@@ -107,4 +106,3 @@ public final class StatusBarFollowSystemUi extends SystemUiBarFollowRuntime {
         throw new UnsupportedOperationException("status-bar follow does not own input handoff");
     }
 }
-

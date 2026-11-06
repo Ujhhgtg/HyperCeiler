@@ -80,7 +80,6 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
                     }
                     session.markInstalled();
                 } catch (Throwable failure) {
-                    rollbackStatusbarHooks();
                     moduleLog(LOG_WARN, TAG, "Deferred system_server status-bar installation failed", failure);
                     session.close();
                 }
@@ -484,4 +483,3 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
 
 
 }
-
