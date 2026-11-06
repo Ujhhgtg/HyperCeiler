@@ -21,11 +21,13 @@ package com.sevtinge.hyperceiler.libhook.rules.home.recent
 import android.animation.ObjectAnimator
 import android.view.MotionEvent
 import android.view.View
+import com.sevtinge.hyperceiler.common.log.XposedLog
 import com.sevtinge.hyperceiler.libhook.appbase.mihome.HomeBaseHookNew
 import com.sevtinge.hyperceiler.libhook.appbase.mihome.Version
 import io.github.lingqiqi5211.ezhooktool.core.callMethod
 import io.github.lingqiqi5211.ezhooktool.core.callStaticMethod
 import io.github.lingqiqi5211.ezhooktool.core.findMethod
+import io.github.lingqiqi5211.ezhooktool.core.findMethodOrNull
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.getObjectField
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.setObjectField
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.createAfterHook
@@ -55,18 +57,7 @@ object RemoveCardAnim : HomeBaseHookNew() {
             }
         }
 
-        findClass("com.miui.home.recents.TaskStackViewLayoutStyleHorizontal").findMethod {
-            name("createScaleDismissAnimation")
-            parameterTypes(View::class.java, Float::class.javaPrimitiveType!!)
-        }.createHook {
-            replace {
-                val view = it.args[0] as View
-                val getScreenHeight = clazz.callStaticMethod("getScreenHeight") as Int
-                ObjectAnimator.ofFloat(view, View.TRANSLATION_Y, view.translationY, -getScreenHeight * 1.1484375f).apply {
-                    duration = 200
-                }
-            }
-        }
+        hookDismissAnimation(clazz)
 
         findClass("com.miui.home.recents.views.VerticalSwipe").findMethod {
             name("calculate")
@@ -89,4 +80,42 @@ object RemoveCardAnim : HomeBaseHookNew() {
             )
         }
     }
+
+    private fun hookDismissAnimation(clazz: Class<*>) {
+        val style = findClassIfExists("com.miui.home.recents.TaskStackViewLayoutStyleHorizontal")
+        if (style == null) {
+            XposedLog.w(TAG, packageName, "TaskStackViewLayoutStyleHorizontal not found, skip")
+            return
+        }
+
+        val dismissAnimation = listOf("createSwipeAnimation", "createScaleDismissAnimation")
+            .firstNotNullOfOrNull { methodName ->
+                style.findMethodOrNull {
+                    name(methodName)
+                    parameterTypes(View::class.java, Float::class.javaPrimitiveType!!)
+                }
+            }
+        if (dismissAnimation == null) {
+            XposedLog.w(TAG, packageName, "dismiss animation method not found, skip")
+            return
+        }
+
+        dismissAnimation.createHook {
+            replace {
+                val view = it.args[0] as View
+                ObjectAnimator.ofFloat(
+                    view,
+                    View.TRANSLATION_Y,
+                    view.translationY,
+                    -screenHeightOf(clazz) * 1.1484375f
+                ).apply {
+                    duration = 200
+                }
+            }
+        }
+    }
+
+    private fun screenHeightOf(clazz: Class<*>): Int =
+        runCatching { clazz.callStaticMethod("getScreenHeight") as Int }
+            .getOrElse { clazz.callStaticMethod("getSystemScreenHeight") as Int }
 }
