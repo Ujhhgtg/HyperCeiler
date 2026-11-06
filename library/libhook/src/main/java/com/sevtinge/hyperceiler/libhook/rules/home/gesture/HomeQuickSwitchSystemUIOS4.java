@@ -15,7 +15,6 @@ import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.MotionEvent;
 import com.sevtinge.hyperceiler.libhook.base.BaseHook;
-import com.sevtinge.hyperceiler.libhook.base.OriginalArgumentsHook;
 import com.sevtinge.hyperceiler.libhook.utils.api.ContextUtils;
 import io.github.lingqiqi5211.ezhooktool.xposed.common.HookParam;
 import io.github.lingqiqi5211.ezhooktool.xposed.java.IMethodHook;
@@ -90,9 +89,6 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
         ArrayDeque<HomeQuickSwitchState> q=local.get();return q==null||q.isEmpty()?EMPTY:q.pop();
     }
     private static boolean failed(HookParam p) { return p.getThrowable()!=null; }
-    private static void observeMethod(Method method, IMethodHook callback) {
-        chain(method, OriginalArgumentsHook.of(callback));
-    }
     @Override public void init() {
         try {bind();}catch(Exception ex){closed=true;log("platform binding declined",ex);}
     }
@@ -112,7 +108,7 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
         Method update=trackerClass.getDeclaredMethod("update",float.class,float.class);
         Method reset=trackerClass.getDeclaredMethod("reset");
         Method input=receiver.getDeclaredMethod("dispatchInputEvent",int.class,InputEvent.class);
-        observeMethod(input,new IMethodHook(){
+        hookMethod(input,new IMethodHook(){
             @Override public void before(HookParam p) {
                 HomeQuickSwitchState state=null;
                 try {if(!closed&&p.getArgs()[1] instanceof MotionEvent e)state=beforeInput(p.getThisObject(),e);}
@@ -125,7 +121,7 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
                 // The receiver owns/recycles the event. NEVER read or restore it here.
             }
         });
-        observeMethod(monitor.getDeclaredMethod("pilferPointers"),new IMethodHook(){
+        hookMethod(monitor.getDeclaredMethod("pilferPointers"),new IMethodHook(){
             @Override public void after(HookParam p) {
                 if(closed||failed(p))return;
                 try {
@@ -142,7 +138,7 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
                 }catch(Exception ex){log("pilfer guard declined",ex);}
             }
         });
-        observeMethod(update,new IMethodHook(){
+        hookMethod(update,new IMethodHook(){
             @Override public void after(HookParam p) {
                 if(closed||failed(p))return;
                 synchronized(guard){
@@ -160,14 +156,14 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
                 }
             }
         });
-        observeMethod(reset,new IMethodHook(){
+        hookMethod(reset,new IMethodHook(){
             @Override public void after(HookParam p) {
                 synchronized(guard){HomeQuickSwitchState s=trackers.get(p.getThisObject());
                     if(s==null)return;if(failed(p))s.retired=true;else s.reset=true;if(s.pending)trace("original tracker reset down="+s.down);complete(s);
                     if(!s.pending||s.retired||s.sent){trackers.remove(p.getThisObject());if(!s.pending){s.tracker=null;s.reset=false;}}}
             }
         });
-        observeMethod(finish,new IMethodHook(){
+        hookMethod(finish,new IMethodHook(){
             @Override public void before(HookParam p) {
                 HomeQuickSwitchState found=null;
                 try {if(!closed&&Boolean.FALSE.equals(p.getArgs()[0]))synchronized(guard){
@@ -188,7 +184,7 @@ public final class HomeQuickSwitchSystemUIOS4 extends BaseHook {
                 }catch(Exception ex){s.retired=true;log("cleanup guard declined",ex);}}
             }
         });
-        observeMethod(android.app.Instrumentation.class.getDeclaredMethod("callApplicationOnCreate",Application.class),new IMethodHook(){
+        hookMethod(android.app.Instrumentation.class.getDeclaredMethod("callApplicationOnCreate",Application.class),new IMethodHook(){
             @Override public void after(HookParam p){install((Context)p.getArgs()[0]);}
         });
         Context current=ContextUtils.getContextNoError(ContextUtils.FLAG_CURRENT_APP);if(current!=null)install(current);

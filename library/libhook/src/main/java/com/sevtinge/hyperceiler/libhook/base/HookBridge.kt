@@ -35,12 +35,8 @@ object HookBridge {
         priority: Int,
         exceptionMode: XposedInterface.ExceptionMode,
         hooker: XposedInterface.Hooker,
-    ): XposedInterface.HookHandle {
-        val observation = HookDiagnostics.observation(BaseHook.diagnosticExecutable(method))
-        val observed = HookDiagnostics.observe(observation, hooker)
-        return HookDiagnostics.install(observation) {
-            method.createInterceptHook(priority, exceptionMode) { chain -> observed.intercept(chain) }
-        }
+    ): XposedInterface.HookHandle = method.createInterceptHook(priority, exceptionMode) { chain ->
+        hooker.intercept(chain)
     }
 
     @JvmStatic
@@ -49,12 +45,8 @@ object HookBridge {
         priority: Int,
         exceptionMode: XposedInterface.ExceptionMode,
         hooker: XposedInterface.Hooker,
-    ): XposedInterface.HookHandle {
-        val observation = HookDiagnostics.observation(BaseHook.diagnosticExecutable(constructor))
-        val observed = HookDiagnostics.observe(observation, hooker)
-        return HookDiagnostics.install(observation) {
-            constructor.createInterceptHook(priority, exceptionMode) { chain -> observed.intercept(chain) }
-        }
+    ): XposedInterface.HookHandle = constructor.createInterceptHook(priority, exceptionMode) { chain ->
+        hooker.intercept(chain)
     }
 
     @JvmStatic

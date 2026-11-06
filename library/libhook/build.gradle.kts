@@ -18,7 +18,6 @@ android {
 
     defaultConfig {
         minSdk = 35
-        consumerProguardFiles("diagnostics-rules.pro")
 
         buildConfigField("String", "APP_MODULE_ID", "\"com.sevtinge.hyperceiler\"")
     }

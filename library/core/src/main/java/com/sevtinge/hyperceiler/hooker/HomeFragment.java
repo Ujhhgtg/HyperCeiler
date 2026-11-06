@@ -24,7 +24,6 @@ import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isM
 import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isHyperOSVersion;
 
 import android.content.Context;
-import android.content.Intent;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -84,11 +83,6 @@ public class HomeFragment extends DashboardFragment {
 
     @Override
     public void initPrefs() {
-        findPreference("prefs_key_home_diagnostics").setOnPreferenceClickListener(preference -> {
-            startActivity(new Intent().setClassName(requireContext().getPackageName(),
-                "com.sevtinge.hyperceiler.diagnostics.HookDiagnosticsActivity"));
-            return true;
-        });
         mHeader = findPreference("prefs_key_home_unsupported");
         mHeaderHomeIsRust = findPreference("prefs_key_home_is_rust");
         mHeaderHomeIsRustNoSupport = findPreference("prefs_key_home_is_rust_no_support");

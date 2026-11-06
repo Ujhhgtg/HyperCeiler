@@ -739,33 +739,6 @@ public abstract class BaseHook {
         }
     }
 
-    static String diagnosticExecutable(java.lang.reflect.Executable method) {
-        try {
-            StringBuilder out=new StringBuilder(method.getDeclaringClass().getName()).append('#').append(method.getName()).append('(');
-            for(Class<?> type:method.getParameterTypes())out.append(type.getName()).append(';');
-            return out.append(')').toString();
-        } catch(Throwable unavailable) { return "executable-signature-unavailable"; }
-    }
-
-    private static String diagnosticSignature(Class<?> owner,String name,Object[] args) {
-        StringBuilder signature=new StringBuilder(owner.getName()).append('#').append(name).append('(');
-        for(int i=0;i+1<args.length;i++){
-            Object value=args[i];
-            signature.append(value instanceof Class<?> type?type.getName():value instanceof String text?text:"?").append(';');
-        }
-        return signature.append(')').toString();
-    }
-
-    private static XposedInterface.HookHandle diagnosedMethod(Class<?> clazz, String name, Object[] args) {
-        var observation=HookDiagnostics.observation(diagnosticSignature(clazz,name,args));
-        return HookDiagnostics.install(observation, () -> Hooks.findAndHookMethod(clazz,name,HookDiagnostics.observeArgs(observation,args)));
-    }
-
-    private static XposedInterface.HookHandle diagnosedConstructor(Class<?> clazz, Object[] args) {
-        var observation=HookDiagnostics.observation(diagnosticSignature(clazz,"<init>",args));
-        return HookDiagnostics.install(observation, () -> Hooks.findAndHookConstructor(clazz,HookDiagnostics.observeArgs(observation,args)));
-    }
-
     // ==================== Hook 方法 ====================
 
     /**
@@ -776,18 +749,15 @@ public abstract class BaseHook {
      * @return HookHandle 对象
      */
     public static XposedInterface.HookHandle hookMethod(Method method, IMethodHook callback) {
-        var observation = HookDiagnostics.observation(diagnosticExecutable(method));
-        return HookDiagnostics.install(observation, () -> Hooks.createHook(method, HookDiagnostics.observe(observation, callback)));
+        return Hooks.createHook(method, callback);
     }
 
     public static XposedInterface.HookHandle hookMethod(Method method, IReplaceHook callback) {
-        var observation = HookDiagnostics.observation(diagnosticExecutable(method));
-        return HookDiagnostics.install(observation, () -> Hooks.createHook(method, HookDiagnostics.observe(observation, callback)));
+        return Hooks.createHook(method, callback);
     }
 
     public static XposedInterface.HookHandle chain(Method method, XposedInterface.Hooker hooker) {
-        var observation = HookDiagnostics.observation(diagnosticExecutable(method));
-        return HookDiagnostics.install(observation, () -> Hooks.intercept(method, HookDiagnostics.observe(observation, hooker)));
+        return Hooks.intercept(method, hooker);
     }
 
     public static XposedInterface.HookHandle chain(
@@ -800,8 +770,7 @@ public abstract class BaseHook {
     }
 
     public static XposedInterface.HookHandle chain(Constructor<?> constructor, XposedInterface.Hooker hooker) {
-        var observation = HookDiagnostics.observation(diagnosticExecutable(constructor));
-        return HookDiagnostics.install(observation, () -> Hooks.intercept(constructor, HookDiagnostics.observe(observation, hooker)));
+        return Hooks.intercept(constructor, hooker);
     }
 
     public static XposedInterface.HookHandle chain(
@@ -819,7 +788,7 @@ public abstract class BaseHook {
      * 最后一个参数必须是 {@link XposedInterface.Hooker}，前面的参数是参数类型
      */
     public static XposedInterface.HookHandle findAndChainMethod(Class<?> clazz, String methodName, Object... args) {
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     public static XposedInterface.HookHandle findAndChainMethod(
@@ -840,7 +809,7 @@ public abstract class BaseHook {
     ) {
         Object[] argsAndHook = Arrays.copyOf(args, args.length + 1);
         argsAndHook[args.length] = hooker;
-        return diagnosedMethod(clazz, methodName, argsAndHook);
+        return Hooks.findAndHookMethod(clazz, methodName, argsAndHook);
     }
 
     public static XposedInterface.HookHandle findAndChainMethod(
@@ -860,10 +829,9 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     public static XposedInterface.HookHandle findAndChainMethod(
@@ -876,7 +844,6 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
         return HookBridge.findAndInterceptMethod(clazz, methodName, priority, exceptionMode, args);
@@ -891,12 +858,11 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
         Object[] argsAndHook = Arrays.copyOf(args, args.length + 1);
         argsAndHook[args.length] = hooker;
-        return diagnosedMethod(clazz, methodName, argsAndHook);
+        return Hooks.findAndHookMethod(clazz, methodName, argsAndHook);
     }
 
     public static XposedInterface.HookHandle findAndChainMethod(
@@ -910,7 +876,6 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
         Object[] argsAndHook = Arrays.copyOf(args, args.length + 1);
@@ -924,7 +889,7 @@ public abstract class BaseHook {
      * 最后一个参数必须是 {@link XposedInterface.Hooker}，前面的参数是参数类型
      */
     public static XposedInterface.HookHandle findAndChainConstructor(Class<?> clazz, Object... args) {
-        return diagnosedConstructor(clazz, args);
+        return Hooks.findAndHookConstructor(clazz, args);
     }
 
     public static XposedInterface.HookHandle findAndChainConstructor(
@@ -943,7 +908,7 @@ public abstract class BaseHook {
     ) {
         Object[] argsAndHook = Arrays.copyOf(args, args.length + 1);
         argsAndHook[args.length] = hooker;
-        return diagnosedConstructor(clazz, argsAndHook);
+        return Hooks.findAndHookConstructor(clazz, argsAndHook);
     }
 
     public static XposedInterface.HookHandle findAndChainConstructor(
@@ -962,10 +927,9 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainConstructor: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedConstructor(clazz, args);
+        return Hooks.findAndHookConstructor(clazz, args);
     }
 
     public static XposedInterface.HookHandle findAndChainConstructor(
@@ -977,7 +941,6 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainConstructor: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
         return HookBridge.findAndInterceptConstructor(clazz, priority, exceptionMode, args);
@@ -991,12 +954,11 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainConstructor: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
         Object[] argsAndHook = Arrays.copyOf(args, args.length + 1);
         argsAndHook[args.length] = hooker;
-        return diagnosedConstructor(clazz, argsAndHook);
+        return Hooks.findAndHookConstructor(clazz, argsAndHook);
     }
 
     public static XposedInterface.HookHandle findAndChainConstructor(
@@ -1009,7 +971,6 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndChainConstructor: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
         Object[] argsAndHook = Arrays.copyOf(args, args.length + 1);
@@ -1062,7 +1023,7 @@ public abstract class BaseHook {
      * @return HookHandle 对象
      */
     public static XposedInterface.HookHandle findAndHookMethod(Class<?> clazz, String methodName, Object... args) {
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     /**
@@ -1079,10 +1040,9 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndHookMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     public static XposedInterface.HookHandle findAndHookMethod(
@@ -1094,24 +1054,22 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className, classLoader);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndHookMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     public static XposedInterface.HookHandle findAndHookConstructor(Class<?> clazz, Object... args) {
-        return diagnosedConstructor(clazz, args);
+        return Hooks.findAndHookConstructor(clazz, args);
     }
 
     public static XposedInterface.HookHandle findAndHookConstructor(String className, Object... args) {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndHookConstructor: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedConstructor(clazz, args);
+        return Hooks.findAndHookConstructor(clazz, args);
     }
 
     public static XposedInterface.HookHandle findAndHookConstructor(
@@ -1122,10 +1080,9 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className, classLoader);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndHookConstructor: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedConstructor(clazz, args);
+        return Hooks.findAndHookConstructor(clazz, args);
     }
 
     /**
@@ -1139,7 +1096,7 @@ public abstract class BaseHook {
      * @return HookHandle 对象
      */
     public static XposedInterface.HookHandle findAndReplaceMethod(Class<?> clazz, String methodName, Object... args) {
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     public static XposedInterface.HookHandle findAndHookMethodReplace(Class<?> clazz, String methodName, Object... args) {
@@ -1160,10 +1117,9 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndReplaceMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     public static XposedInterface.HookHandle findAndHookMethodReplace(String className, String methodName, Object... args) {
@@ -1179,10 +1135,9 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className, classLoader);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "findAndReplaceMethod: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return null;
         }
-        return diagnosedMethod(clazz, methodName, args);
+        return Hooks.findAndHookMethod(clazz, methodName, args);
     }
 
     /**
@@ -1194,12 +1149,7 @@ public abstract class BaseHook {
      * @return HookHandle 对象列表
      */
     public static List<XposedInterface.HookHandle> hookAllMethods(Class<?> clazz, String methodName, IMethodHook callback) {
-        var observation=HookDiagnostics.observation(clazz.getName()+"#"+methodName+"/*");
-        var methods=Methods.find(clazz).filterByName(methodName).toList();
-        if(methods.isEmpty()) HookDiagnostics.event(observation.id,observation.id,"FAILED","METHOD_RESOLUTION","METHOD_NOT_FOUND","No matching methods");
-        var result=Hooks.createHooks(methods,HookDiagnostics.observe(observation,callback));
-        if(!result.isEmpty())observation.installed(result);
-        return result;
+        return Hooks.createHooks(Methods.find(clazz).filterByName(methodName).toList(), callback);
     }
 
     /**
@@ -1214,7 +1164,6 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "hookAllMethods: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return java.util.Collections.emptyList();
         }
         return hookAllMethods(clazz, methodName, callback);
@@ -1229,7 +1178,6 @@ public abstract class BaseHook {
         Class<?> clazz = classLoader == null ? findClassIfExists(className) : findClassIfExists(className, classLoader);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "hookAllMethods: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return java.util.Collections.emptyList();
         }
         return hookAllMethods(clazz, methodName, callback);
@@ -1243,10 +1191,7 @@ public abstract class BaseHook {
      * @return HookHandle 对象列表
      */
     public static List<XposedInterface.HookHandle> hookAllConstructors(Class<?> clazz, IMethodHook callback) {
-        var observation=HookDiagnostics.observation(clazz.getName()+"#<init>/*");
-        var result=Hooks.createConstructorHooks(Constructors.find(clazz).toList(),HookDiagnostics.observe(observation,callback));
-        if(!result.isEmpty())observation.installed(result);
-        return result;
+        return Hooks.createConstructorHooks(Constructors.find(clazz).toList(), callback);
     }
 
     /**
@@ -1260,7 +1205,6 @@ public abstract class BaseHook {
         Class<?> clazz = findClassIfExists(className);
         if (clazz == null) {
             XposedLog.w(BaseLoad.getTag(), "hookAllConstructors: class not found: " + className);
-            HookDiagnostics.event(HookDiagnostics.owner()+"/"+className,className,"FAILED","CLASS_RESOLUTION","CLASS_NOT_FOUND","Required Hook target class was not resolved");
             return java.util.Collections.emptyList();
         }
         return hookAllConstructors(clazz, callback);
