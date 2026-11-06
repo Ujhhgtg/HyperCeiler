@@ -16,3 +16,9 @@ local.properties
 signing.properties
 /.kotlin
 /library/hook
+
+# Raw LSPosed/KernelSU log bundles from other people's devices; never publish them.
+tests/lsposed-log-*/
+
+# Python bytecode from the tests/ verification scripts.
+__pycache__/

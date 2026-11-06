@@ -215,4 +215,3 @@ object DockCustomNew : BaseHook() {
         }
     }
 }
-
