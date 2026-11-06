@@ -1,2 +1,0 @@
-#pragma once
-namespace std { inline bool isfinite(double x){return __builtin_isfinite(x);} inline double abs(double x){return __builtin_fabs(x);} }

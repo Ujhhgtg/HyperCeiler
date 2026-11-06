@@ -19,7 +19,6 @@
 package com.sevtinge.hyperceiler.hooker.home;
 
 import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.Miui.isPad;
-import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isHyperOSVersion;
 import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isMoreHyperOSVersion;
 
 import androidx.annotation.NonNull;
@@ -73,7 +72,7 @@ public class HomeDockSettings extends DashboardFragment implements Preference.On
             mDockHeight.setVisible(false);
         }
 
-        if (isPad() && !isHyperOSVersion(4f)) {
+        if (isPad()) {
             setFuncHint(mAddDockEnable, 1);
             setFuncHint(mIconAppTitle, 1);
             setFuncHint(mDockHeight, 1);
@@ -99,7 +98,6 @@ public class HomeDockSettings extends DashboardFragment implements Preference.On
 
         setCanBeVisible(mBlurMode);
         mDockBackgroundBlurEnable.setOnPreferenceChangeListener(this);
-        HomeOS4AdaptationGate.apply(getPreferenceScreen(), getPreferenceScreenResId());
     }
 
     @Override

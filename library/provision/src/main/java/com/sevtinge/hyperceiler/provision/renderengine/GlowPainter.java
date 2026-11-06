@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.RenderEffect;
 import android.graphics.RuntimeShader;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 
 import com.sevtinge.hyperceiler.provision.R;
 
@@ -145,7 +145,7 @@ public class GlowPainter {
             }
             return string;
         } catch (Exception e) {
-            ModuleLog.e("Error", e.toString());
+            Log.e("Error", e.toString());
             return null;
         }
     }

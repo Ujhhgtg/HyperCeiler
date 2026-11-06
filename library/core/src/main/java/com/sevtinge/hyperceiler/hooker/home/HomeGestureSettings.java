@@ -19,7 +19,6 @@
 package com.sevtinge.hyperceiler.hooker.home;
 
 import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.Miui.isPad;
-import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isHyperOSVersion;
 import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isMoreHyperOSVersion;
 
 import androidx.preference.PreferenceCategory;
@@ -66,11 +65,9 @@ public class HomeGestureSettings extends DashboardFragment {
         }
 
         if (isPad()) {
-            if (!isHyperOSVersion(4f)) {
-                setFuncHint(mBackGestureHaptic, 1);
-                setFuncHint(mDisableAllGesture, 1);
-            }
-        } else if (isMoreHyperOSVersion(3f) && !isHyperOSVersion(4f)) {
+            setFuncHint(mBackGestureHaptic, 1);
+            setFuncHint(mDisableAllGesture, 1);
+        } else if (isMoreHyperOSVersion(3f)) {
             mQuickBack.setVisible(false);
             mHighBackArea.setEnabled(mSwitch);
             mWideBackArea.setEnabled(mSwitch);
@@ -80,8 +77,8 @@ public class HomeGestureSettings extends DashboardFragment {
         mDisableAllGesture.setOnPreferenceChangeListener(
             (v, newValue) -> {
                 boolean enabled = (Boolean) newValue;
-                mHighBackArea.setEnabled(isHyperOSVersion(4f) || enabled);
-                mWideBackArea.setEnabled(isHyperOSVersion(4f) || enabled);
+                mHighBackArea.setEnabled(enabled);
+                mWideBackArea.setEnabled(enabled);
                 return true;
             }
         );
@@ -101,7 +98,6 @@ public class HomeGestureSettings extends DashboardFragment {
                 return true;
             });
         }
-        HomeOS4AdaptationGate.apply(getPreferenceScreen(), getPreferenceScreenResId());
     }
 
     private void updateBackGestureHapticSummary(String value) {

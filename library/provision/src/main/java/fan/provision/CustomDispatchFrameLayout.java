@@ -20,7 +20,7 @@ package fan.provision;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
@@ -52,7 +52,7 @@ public class CustomDispatchFrameLayout extends FrameLayout {
         if (isAnimEnded()) {
             return super.dispatchTouchEvent(ev);
         }
-        ModuleLog.w("OobeUtil2", "anim not end, skip touch event");
+        Log.w("OobeUtil2", "anim not end, skip touch event");
         return true;
     }
 

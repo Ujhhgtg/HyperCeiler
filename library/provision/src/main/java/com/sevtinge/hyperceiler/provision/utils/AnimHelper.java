@@ -21,7 +21,7 @@ package com.sevtinge.hyperceiler.provision.utils;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -70,7 +70,7 @@ public class AnimHelper {
 
             @Override
             public void onAnimationEnd(@NonNull Animator animation) {
-                ModuleLog.d(TAG, "onAnimationEnd");
+                Log.d(TAG, "onAnimationEnd");
                 if (target != null) {
                     target.setEnabled(true);
                 }

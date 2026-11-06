@@ -27,7 +27,7 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -208,7 +208,7 @@ public class TermsAndStatementFragment extends BaseFragment {
                     String inputStr = (s == null) ? "" : s.toString();
                     String targetStr = OobeUtils.getSecureSixDigit();
                     // 调试打印（可选）：如果还是不亮，看一眼 Logcat
-                    //ModuleLog.d("Verify", "Input: [" + inputStr + "] Target: [" + targetStr + "]");
+                    //Log.d("Verify", "Input: [" + inputStr + "] Target: [" + targetStr + "]");
 
 
                     okButton.setEnabled(inputStr.equals(targetStr));

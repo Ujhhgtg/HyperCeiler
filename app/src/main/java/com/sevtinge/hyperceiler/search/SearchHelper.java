@@ -1,7 +1,5 @@
 package com.sevtinge.hyperceiler.search;
 
-import static com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isHyperOSVersion;
-
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -16,7 +14,6 @@ import androidx.preference.PreferenceScreen;
 import com.sevtinge.hyperceiler.common.log.AndroidLog;
 import com.sevtinge.hyperceiler.dashboard.DashboardFragment;
 import com.sevtinge.hyperceiler.home.HomePageFragment;
-import com.sevtinge.hyperceiler.hooker.home.HomeOS4EntryVisibility;
 import com.sevtinge.hyperceiler.libhook.utils.api.ThreadPoolManager;
 import com.sevtinge.hyperceiler.prefs.LayoutPreference;
 import com.sevtinge.hyperceiler.prefs.PreferenceHeader;
@@ -160,8 +157,7 @@ public class SearchHelper {
                         String childFragment = xml.getAttributeValue(ANDROID_NS, "fragment");
 
                         String modTitle = resolveStringRef(res, titleAttr);
-                        boolean isHidden = HomeOS4EntryVisibility.isHidden(
-                            xmlResId, keyAttr, "false".equals(isVisibleAttr), isHyperOSVersion(4f));
+                        boolean isHidden = "false".equals(isVisibleAttr);
 
                         if (childFragment != null) {
                             int childXml = getXmlResIdFromFragment(childFragment);

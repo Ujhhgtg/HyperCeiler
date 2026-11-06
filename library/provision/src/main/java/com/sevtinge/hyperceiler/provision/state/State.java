@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,7 +46,7 @@ public class State {
         try {
             return (State) Class.forName(PREFIX + name).getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            ModuleLog.e(TAG, String.valueOf(e));
+            Log.e(TAG, String.valueOf(e));
             return null;
         } catch (InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -83,7 +83,7 @@ public class State {
     }
 
     public void onEnter(boolean z, boolean z2, @Nullable Bundle activityOptions) {
-        ModuleLog.d(TAG, "targetClass is " + mTargetClass);
+        Log.d(TAG, "targetClass is " + mTargetClass);
         Intent intent = createEnterIntent(z, z2);
         launchIntent(intent, activityOptions);
     }

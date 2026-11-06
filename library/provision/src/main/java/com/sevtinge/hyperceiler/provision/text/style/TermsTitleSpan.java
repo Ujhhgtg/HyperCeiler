@@ -20,7 +20,7 @@ package com.sevtinge.hyperceiler.provision.text.style;
 
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -46,12 +46,12 @@ public class TermsTitleSpan extends ClickableSpan {
     @Override
     public void onClick(@NonNull View widget) {
         TermsAndStatementBottomSheet sheet = new TermsAndStatementBottomSheet(mContext);
-        ModuleLog.i("TermsAndStatementFragment", " here is TermsTitleSpan onClick ");
+        Log.i("TermsAndStatementFragment", " here is TermsTitleSpan onClick ");
         if (mHiperlinkType == 2) {
-            ModuleLog.i("TermsAndStatementFragment", " here is User Agreement click ");
+            Log.i("TermsAndStatementFragment", " here is User Agreement click ");
             TermsAndStatementBottomSheet.loadMarkdown("https://raw.githubusercontent.com/ReChronoRain/website/main/Protocol.md");
         } else if (mHiperlinkType == 1) {
-            ModuleLog.i("TermsAndStatementFragment", " here is Privacy Policy click ");
+            Log.i("TermsAndStatementFragment", " here is Privacy Policy click ");
             TermsAndStatementBottomSheet.loadMarkdown("https://raw.githubusercontent.com/ReChronoRain/website/main/Privacy.md");
         }
         sheet.show();

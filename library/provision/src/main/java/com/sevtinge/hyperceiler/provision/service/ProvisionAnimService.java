@@ -23,7 +23,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
-import com.sevtinge.hyperceiler.common.log.ModuleLog;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -53,13 +53,13 @@ public class ProvisionAnimService extends Service {
                 }
                 mListeners.finishBroadcast();
             } catch (RemoteException e) {
-                ModuleLog.e(TAG, "Can not call IAnimCallback:", e);
+                Log.e(TAG, "Can not call IAnimCallback:", e);
             }
         }
 
         @Override
         public IBinder asBinder() {
-            ModuleLog.d(TAG, "stub asBinder no anim");
+            Log.d(TAG, "stub asBinder no anim");
             return super.asBinder();
         }
 
@@ -75,7 +75,7 @@ public class ProvisionAnimService extends Service {
 
         @Override
         public void playNextAnim(int i) throws RemoteException {
-            ModuleLog.i(TAG, " without aim playNextAnim");
+            Log.i(TAG, " without aim playNextAnim");
             dispatchVideoPlay(false);
         }
 
