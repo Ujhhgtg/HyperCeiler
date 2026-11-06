@@ -9,6 +9,7 @@
 package com.sevtinge.hyperceiler.libhook.rules.systemframework.statusbarfollow;
 
 import android.os.Build;
+import android.util.Log;
 
 import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbarfollow.RecentsOpenSession;
 import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbarfollow.StatusBarFollowGate;
@@ -194,10 +195,10 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
             // initializes BarFollowAnimationUtils, caching the feature service's fallback
             // before HyperOSCustFeatureResolve is available. systemReady supplies the
             // actual native owner; only hot reload may recover an already-running owner.
-            moduleLog(LOG_INFO, TAG, "Native bar lifetime guards installed; activation=" + false + ", ready=" + ready);
+            moduleLog(Log.INFO, TAG, "Native bar lifetime guards installed; activation=" + false + ", ready=" + ready);
         } catch (Throwable failure) {
             serverBarLifetimeHooksReady = false;
-            moduleLog(LOG_WARN, TAG, "Native bar lifetime guards unavailable; no real-window activation", failure);
+            moduleLog(Log.WARN, TAG, "Native bar lifetime guards unavailable; no real-window activation", failure);
         }
     }
 
@@ -307,7 +308,7 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
             installServerBarWindowBridge(instance);
             repairServerNavigationPolicy(instance);
         } catch (Throwable failure) {
-            moduleLog(LOG_WARN, TAG, "Native bar owner restoration unavailable", failure);
+            moduleLog(Log.WARN, TAG, "Native bar owner restoration unavailable", failure);
         }
     }
 
@@ -357,14 +358,14 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
                         retire.invoke(impl, display);
                         traverse.invoke(wms);
                     }
-                    moduleLog(LOG_INFO, TAG, "Retired prematurely initialized native multi-navigation owner;"
+                    moduleLog(Log.INFO, TAG, "Retired prematurely initialized native multi-navigation owner;"
                             + " authoritative HyperOS policy disables task navigation bars");
                 } catch (Throwable failure) {
-                    moduleLog(LOG_WARN, TAG, "Native navigation policy reconciliation failed", failure);
+                    moduleLog(Log.WARN, TAG, "Native navigation policy reconciliation failed", failure);
                 }
             });
         } catch (Throwable failure) {
-            moduleLog(LOG_WARN, TAG, "Native navigation policy proof unavailable; preserving owner", failure);
+            moduleLog(Log.WARN, TAG, "Native navigation policy proof unavailable; preserving owner", failure);
         }
     }
 
@@ -378,11 +379,11 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
         if (!serverBarLifetimeHooksReady || serverBarWindowBridge != null) return;
         try {
             serverBarWindowBridge = new ServerBarWindowBridge(impl, serverBarFollowLifecycle, (message, failure) -> {
-                if (failure == null) moduleLog(LOG_INFO, TAG, message);
-                else moduleLog(LOG_WARN, TAG, message, failure);
+                if (failure == null) moduleLog(Log.INFO, TAG, message);
+                else moduleLog(Log.WARN, TAG, message, failure);
             });
         } catch (Throwable failure) {
-            moduleLog(LOG_WARN, TAG, "WMS bar window bridge unavailable", failure);
+            moduleLog(Log.WARN, TAG, "WMS bar window bridge unavailable", failure);
         }
     }
 
@@ -391,7 +392,7 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
         try {
             if (bridge != null && !bridge.canAwaitClose()) return false;
         } catch (ReflectiveOperationException failure) {
-            moduleLog(LOG_WARN, TAG, "Cannot prove safe native bar retirement wait", failure);
+            moduleLog(Log.WARN, TAG, "Cannot prove safe native bar retirement wait", failure);
             return false;
         }
         serverNavigationPolicyEpoch.incrementAndGet();
@@ -419,9 +420,9 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
                 installServerBarWindowBridge(bridge.nativeOwner());
             });
             else serverBarFollowLifecycle.cancelReloadReservation();
-            moduleLog(LOG_WARN, TAG, "Native bar retirement not committed; rejected reload keeps old runtime recovery");
+            moduleLog(Log.WARN, TAG, "Native bar retirement not committed; rejected reload keeps old runtime recovery");
         } else if (bridge != null) {
-            moduleLog(LOG_INFO, TAG, "Native bar restoration and lease cleanup completed within this hot-reload request");
+            moduleLog(Log.INFO, TAG, "Native bar restoration and lease cleanup completed within this hot-reload request");
         }
         return ready;
     }
