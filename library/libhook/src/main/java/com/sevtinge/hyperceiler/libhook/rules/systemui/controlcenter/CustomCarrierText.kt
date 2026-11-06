@@ -44,12 +44,6 @@ import io.github.lingqiqi5211.ezhooktool.xposed.dsl.setIntField
  * 控制中心运营商名称自定义；设置变更后重启系统界面。
  */
 object CustomCarrierText : BaseHook() {
-    private const val ON_MEASURE = "onMeasure"
-    private const val CARRIER_TEXT_CHANGED = "onCarrierTextChanged"
-    private const val CARRIER_CALLBACK = "com.android.systemui.controlcenter.shade.ControlCenterCarrierText\$mCarrierTextCallback\$1"
-    private const val CARRIER_LAYOUT = "com.android.systemui.controlcenter.shade.MiuiCarrierTextLayout"
-    private const val HEADER_CONTROLLER = "com.android.systemui.controlcenter.shade.ControlCenterHeaderController"
-
 
     val getOperator by lazy {
         PrefsBridge.getStringAsInt("system_ui_control_center_hide_operator", 0)
@@ -73,8 +67,6 @@ object CustomCarrierText : BaseHook() {
         }
     }
 
-    // ROM calls and rollback can throw arbitrary runtime failures; preserve the host and cleanup boundary.
-    @Suppress("TooGenericExceptionCaught")
     private fun hookOS4() {
         val mode = PrefsBridge.getStringAsInt("system_ui_control_center_hide_operator", 0)
         if (mode !in 1..3) return
@@ -82,17 +74,17 @@ object CustomCarrierText : BaseHook() {
         val handles = ArrayList<XposedInterface.HookHandle>()
         try {
             val callback = exactMethod(
-                requiredClass(CARRIER_CALLBACK),
-                CARRIER_TEXT_CHANGED, Int::class.java, String::class.java, Int::class.java
+                requiredClass($$"com.android.systemui.controlcenter.shade.ControlCenterCarrierText$mCarrierTextCallback$1"),
+                "onCarrierTextChanged", Int::class.java, String::class.java, Int::class.java
             )
-            val layout = requiredClass(CARRIER_LAYOUT)
+            val layout = requiredClass("com.android.systemui.controlcenter.shade.MiuiCarrierTextLayout")
             val additional: Method?
             val views: List<java.lang.reflect.Field>
             if (mode == 1) {
-                additional = exactMethod(layout, ON_MEASURE, Int::class.java, Int::class.java)
+                additional = exactMethod(layout, "onMeasure", Int::class.java, Int::class.java)
                 views = listOf(viewField(layout, "carrierSeparatorView"), viewField(layout, "carrierSeparatorText"))
             } else if (mode == 2) {
-                val header = requiredClass(HEADER_CONTROLLER)
+                val header = requiredClass("com.android.systemui.controlcenter.shade.ControlCenterHeaderController")
                 val privacy = "com.android.systemui.plugins.miui.statusbar.MiuiPrivacyController"
                 additional = exactMethod(header, "updateCarrierAndPrivacyVisible",
                     requiredClass(privacy + "\$MiuiPromptInfo"), requiredClass(privacy + "\$AndroidPromptInfo"))
@@ -102,8 +94,6 @@ object CustomCarrierText : BaseHook() {
                 views = emptyList()
             }
             handles.add(checkNotNull(hookMethod(callback, object : IMethodHook {
-                // ROM calls and rollback can throw arbitrary runtime failures; preserve the host and cleanup boundary.
-                @Suppress("TooGenericExceptionCaught")
                 override fun before(param: HookParam) {
                     if (!active.get() || param.isSkipped) return
                     try {
@@ -175,7 +165,7 @@ object CustomCarrierText : BaseHook() {
 
     private fun hookLegacyCarrierText() {
         runCatching {
-            loadClass("com.android.systemui.statusbar.phone.MiuiKeyguardStatusBarView").findMethod { name(CARRIER_TEXT_CHANGED) }.createBeforeHook { param ->
+            loadClass("com.android.systemui.statusbar.phone.MiuiKeyguardStatusBarView").findMethod { name("onCarrierTextChanged") }.createBeforeHook { param ->
                     param.args[2] = transformCarrierText(
                         slotId = param.args[1] as Int,
                         carrierText = param.args[2] as? String
@@ -187,7 +177,7 @@ object CustomCarrierText : BaseHook() {
     // 显示设备名称
     private fun hookModernCarrierText() {
         runCatching {
-            loadClass(CARRIER_CALLBACK).findMethod { name(CARRIER_TEXT_CHANGED) }.createBeforeHook { param ->
+            loadClass($$"com.android.systemui.controlcenter.shade.ControlCenterCarrierText$mCarrierTextCallback$1").findMethod { name("onCarrierTextChanged") }.createBeforeHook { param ->
                     param.args[2] = transformCarrierText(
                         slotId = param.args[1] as Int,
                         carrierText = param.args[2] as? String
@@ -215,7 +205,7 @@ object CustomCarrierText : BaseHook() {
 
     // 隐藏分割线
     private fun hideCarrierSeparator() {
-        loadClass(CARRIER_LAYOUT).findMethod { name(ON_MEASURE); parameterTypes(Int::class.java, Int::class.java) }.createBeforeHook { param ->
+        loadClass("com.android.systemui.controlcenter.shade.MiuiCarrierTextLayout").findMethod { name("onMeasure"); parameterTypes(Int::class.java, Int::class.java) }.createBeforeHook { param ->
                 val viewGroup = param.thisObject as ViewGroup
                 val widthMeasureSpec = param.args[0] as Int
                 val heightMeasureSpec = param.args[1] as Int
@@ -223,7 +213,7 @@ object CustomCarrierText : BaseHook() {
                 if (!viewGroup.isVisible) {
                     // super.onMeasure
                     com.sevtinge.hyperceiler.libhook.base.BaseHook.invokeSuperMethod(
-                        ON_MEASURE, viewGroup,
+                        "onMeasure", viewGroup,
                         widthMeasureSpec,
                         heightMeasureSpec
                     )
@@ -248,7 +238,7 @@ object CustomCarrierText : BaseHook() {
 
                 // super.onMeasure
                 com.sevtinge.hyperceiler.libhook.base.BaseHook.invokeSuperMethod(
-                    ON_MEASURE, viewGroup,
+                    "onMeasure", viewGroup,
                     View.MeasureSpec.makeMeasureSpec(availableWidth, View.MeasureSpec.EXACTLY),
                     heightMeasureSpec
                 )
@@ -264,7 +254,7 @@ object CustomCarrierText : BaseHook() {
 
     // 隐藏全部名称
     private fun hideCarrierText() {
-        loadClass(HEADER_CONTROLLER).findMethod { name("updateCarrierAndPrivacyVisible") }.createAfterHook { param ->
+        loadClass("com.android.systemui.controlcenter.shade.ControlCenterHeaderController").findMethod { name("updateCarrierAndPrivacyVisible") }.createAfterHook { param ->
                 param.thisObject.getObjectFieldAs<View>("carrierLayout").visibility = View.INVISIBLE
             }
     }

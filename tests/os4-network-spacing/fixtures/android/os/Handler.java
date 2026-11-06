@@ -7,8 +7,7 @@ public class Handler {
     public final Looper looper = new Looper();
     public int sends;
     public int removes;
-    public boolean rejectPost;
-    public boolean throwPost;
+    public boolean rejectPost, throwPost;
     public Runnable onHas;
     public Looper getLooper() { return looper; }
     public boolean post(Runnable body) {

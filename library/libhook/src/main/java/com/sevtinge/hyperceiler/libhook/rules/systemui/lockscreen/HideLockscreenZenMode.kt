@@ -47,8 +47,6 @@ object HideLockscreenZenMode : BaseHook() {
             }
     }
 
-    // ROM calls and rollback can throw arbitrary runtime failures; preserve the host and cleanup boundary.
-    @Suppress("TooGenericExceptionCaught")
     private fun hookOS4() {
         val active = AtomicBoolean(false)
         val handles = ArrayList<XposedInterface.HookHandle>()
@@ -87,8 +85,6 @@ object HideLockscreenZenMode : BaseHook() {
                 }
             })))
             handles.add(checkNotNull(hookMethod(emit, object : IMethodHook {
-                // ROM calls and rollback can throw arbitrary runtime failures; preserve the host and cleanup boundary.
-                @Suppress("TooGenericExceptionCaught")
                 override fun before(param: HookParam) {
                     if (!active.get() || param.isSkipped || param.thisObject?.javaClass != collector) return
                     try {
