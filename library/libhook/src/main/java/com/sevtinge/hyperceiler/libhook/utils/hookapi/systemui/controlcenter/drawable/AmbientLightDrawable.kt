@@ -59,9 +59,6 @@ class AmbientLightDrawable(
     private var isLightMode = 0
     private var nextResizeAnim = false
 
-    val isReady: Boolean
-        get() = runtimeShader != null
-
     init {
         try {
             runtimeShader = RuntimeShader(AGSL_SRC)
@@ -76,10 +73,7 @@ class AmbientLightDrawable(
     }
 
     fun setLightMode(light: Boolean) {
-        val mode = if (light) 1 else 0
-        if (isLightMode == mode) return
-        isLightMode = mode
-        invalidateSelf()
+        isLightMode = if (light) 1 else 0
     }
 
     fun setGradientColor(color: Int, skipAnim: Boolean = false) {
@@ -91,7 +85,6 @@ class AmbientLightDrawable(
         if (shouldSnap) {
             sourceColor = color
             currentColor = color
-            targetColor = color
             colorState = AnimationState.DONE
         } else {
             sourceColor = currentColor
@@ -103,23 +96,12 @@ class AmbientLightDrawable(
 
     fun start() {
         startTime = SystemClock.elapsedRealtime()
-        pauseTime = 0L
-        pauseDuration = 0L
-        pause = false
-        invalidateSelf()
+        resume()
     }
 
     fun stop() {
         pause()
-        // Freeze the last drawn frame; a stopped drawable must not keep
-        // scheduling color/resize frames or carry pending work to a new owner.
-        sourceColor = currentColor
-        targetColor = currentColor
-        colorState = AnimationState.DONE
-        sourceHeight = currentHeight
-        targetHeight = currentHeight
-        resizeState = AnimationState.DONE
-        nextResizeAnim = false
+        pauseDuration = 0L
     }
 
     fun pause() {
@@ -222,8 +204,7 @@ class AmbientLightDrawable(
                 colorVec4[0] = Color.red(currentColor) / 255f
                 colorVec4[1] = Color.green(currentColor) / 255f
                 colorVec4[2] = Color.blue(currentColor) / 255f
-                colorVec4[3] = (Color.alpha(currentColor) / 255f) *
-                    (duration / LIGHT_ANIM_DURATION).coerceIn(0.0f, 1.0f)
+                colorVec4[3] = (duration / LIGHT_ANIM_DURATION).coerceIn(0.0f, 1.0f)
                 setFloatUniform("uGradientColor", colorVec4)
             }
             p0.drawRect(0.0f, 0.0f, w, h, paint)
