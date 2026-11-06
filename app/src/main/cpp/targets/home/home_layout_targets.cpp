@@ -8,7 +8,6 @@
  * cross-reference did.
  */
 #include "targets/home/home_layout_resolver.h"
-#include "nativehook/safe_mode.h"
 
 #include <android/log.h>
 #include <pthread.h>
@@ -59,7 +58,7 @@ void *scan(void *) {
 } // namespace
 
 void resolve_home_layout_targets() {
-    if (nhk::home_safe_mode::decision().blocked || !enabled()) return;
+    if (!enabled()) return;
 
     // Off the launcher's critical path: the scan walks every mapped image and arms a signal
     // boundary around its reads, and neither belongs on the thread that is starting the desktop.
