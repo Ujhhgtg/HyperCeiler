@@ -22,8 +22,6 @@
  */
 #pragma once
 
-#include <algorithm>
-
 #include "elf_image.h"
 #include "nhk_base.h"
 #include "page_guard.h"

@@ -16,7 +16,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <span>
 #include <string_view>
 // sysconf/_SC_PAGESIZE live in different headers per platform.
