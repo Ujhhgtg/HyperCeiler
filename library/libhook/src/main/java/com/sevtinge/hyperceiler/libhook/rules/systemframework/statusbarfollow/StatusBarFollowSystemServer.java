@@ -484,3 +484,4 @@ public final class StatusBarFollowSystemServer extends StatusBarFollowRuntime {
 
 
 }
+

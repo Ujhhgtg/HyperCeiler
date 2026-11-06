@@ -1855,3 +1855,6 @@ public abstract class SystemUiBarFollowRuntime extends StatusBarFollowRuntime {
         recentsBars.detach();
     }
 }
+
+
+
