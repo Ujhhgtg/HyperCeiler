@@ -193,8 +193,9 @@ public final class DataSaverIconOS4 extends BaseHook {
                 current = getHolder.invoke(icons, 0, slot);
             }
             // Do not reinterpret or replace a bindable/mobile/foreign holder.
-            return current != null && current.getClass() == holder
-                && holderType.getInt(current) == 0 && holderIcon.get(current) != null;
+            if (current == null || current.getClass() != holder
+                || holderType.getInt(current) != 0 || holderIcon.get(current) == null) return false;
+            return true;
         }
 
     }
