@@ -53,9 +53,6 @@ object NativeHomeHooksOS4 {
     ): Int
     private external fun nativeStatus(): Int
 
-    /** Safe Java-side entry that drains native messages buffered before JNI was ready. */
-    private external fun nativeFlushLogs(): Int
-
     /**
      * Push the Dock switch into the native pipeline.
      *
@@ -154,7 +151,6 @@ object NativeHomeHooksOS4 {
         try {
             loadLibrary()
             libraryLoaded = true
-            runCatching { nativeFlushLogs() }
             stage("library loaded name=$LIBRARY")
         } catch (t: Throwable) {
             failure = t
