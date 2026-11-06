@@ -32,6 +32,3 @@ tests/lsposed-log-*/
 
 # AI agent working conventions (kept locally, not tracked)
 AGENTS.md
-
-# Local execution reports; intentionally not committed.
-reports/
