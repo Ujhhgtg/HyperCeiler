@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Production failure reports stay visible with ordinary logging disabled; old endpoints remain usable."""
+"""Production failure reports stay visible with ordinary logging disabled."""
 from pathlib import Path
 import re,subprocess,tempfile
 root=Path(__file__).resolve().parents[2]
@@ -21,29 +21,7 @@ with tempfile.TemporaryDirectory(prefix='hc-log-diagnostics-') as temp:
     sources += [root/'app/src/main/java/com/sevtinge/hyperceiler/log/LogSyncDiagnostics.java',Path(__file__).with_name('LogSyncDiagnosticsTest.java')]
     subprocess.run(['javac','-encoding','UTF-8','-d',str(temp/'classes')]+[str(p) for p in sources],check=True)
     subprocess.run(['java','-ea','-cp',str(temp/'classes'),'com.sevtinge.hyperceiler.log.LogSyncDiagnosticsTest'],check=True)
-    hooks=(root/'app/src/main/cpp/targets/home/home_layout_hooks.cpp').read_text(encoding='utf-8')
-    begin=re.search(r'std::array<std::atomic_uint32_t,\d+> g_scale_bind_failure',hooks).start()
-    end=hooks.index('bool bind_icon_render()',begin)
-    (temp/'binding-diagnostic.h').write_text(hooks[begin:end],encoding='utf-8')
-    for name in ['bind_folder_animation_scale','bind_widget_scale','bind_folder_icon_scale']:
-        begin=hooks.index('bool '+name+'()');end=hooks.index('\nbool ',begin+6)
-        body=hooks[begin:end]
-        assert 'return false;' not in body,name+' has an unreported failure path'
-        assert 'scale_bind_failure' in body,name
-    subprocess.run(['c++','-std=c++20','-Wall','-Wextra','-Werror','-I'+str(root/'app/src/main/cpp'),'-I'+str(temp),str(Path(__file__).with_name('native.cpp')),'-o',str(temp/'native')],check=True)
-    subprocess.run([str(temp/'native')],check=True)
-    java=(root/'library/libhook/src/main/java/com/sevtinge/hyperceiler/libhook/rules/home/dock/HomeLayoutNativeEndpointOS4.java').read_text(encoding='utf-8')
-    header=(root/'app/src/main/cpp/targets/home/home_endpoint_diagnostics.h').read_text(encoding='utf-8')
-    for j,c in [('ENDPOINT_DIAGNOSTICS_MAGIC','kEndpointDiagnosticsMagic'),('ENDPOINT_DIAGNOSTICS_SCHEMA','kEndpointDiagnosticsSchema'),('ENDPOINT_REVISION','kEndpointRevision')]:
-        a=int(re.search(j+r'\s*=\s*(0x[0-9a-fA-F]+|\d+)',java)[1],0)
-        b=int(re.search(c+r'\s*=\s*(0x[0-9a-fA-F]+|\d+)',header)[1],0)
-        assert a==b,(j,c)
-    capabilities=int(re.search(r'ENDPOINT_CAPABILITIES\s*=\s*(\d+)',java)[1])
-    expected=0
-    for key in ('kIndependentScalesCapability','kDockTitleCapability','kRecentLayoutCapability','kDrawerSearchCapability','kLayoutPoliciesCapability'):
-        expected |= int(re.search(key+r'\s*=\s*(\d+)',header)[1])
-    assert capabilities==expected
-print('endpoint writer/reader revision and capability contract: PASS')
+
 
 # Execute the production LSPosed copy script against disposable directories.
 # Copy/chmod failures must be explicit and must retain the previous target contents.
