@@ -4,7 +4,7 @@ Run `python3 tests/ime-recreation/run.py` (JDK 17+ required). The test compiles
 the production support installer, input-method config, and third-party package
 dispatcher. Only Android services and the hook-registration boundary are replaced.
 
-The stock OS4 `InputMethodBottomManager.onDestroy()` resets `sIsImeSupport` to -1.
+The stock `InputMethodBottomManager.onDestroy()` resets `sIsImeSupport` to -1.
 This test repeats that lifecycle 100 times with one reused manager class, checks
 the support predicate and an entry that reads the field directly, then checks
 cleanup, older method/field variants, and bounded recovery diagnostics.
@@ -13,7 +13,7 @@ methods still install, while disabled/unselected targets stay disabled. Legacy
 selection remains supported. Actual ART hook interception and process restarts
 require device verification; this fixture does not emulate ART.
 
-On Xiaomi 15 / OS4 Android 17 with WeType 4.0.0, the final Release was checked
+On Xiaomi 15 / Android 17 with WeType 4.0.0, the final Release was checked
 through service recreation in the same process (switch away/back) and three
 SIGKILL/restart cycles on 2026-10-20. Every case restored the visible MIUI bottom
 view and an 876 px input frame matching the 876 px keyboard content; the extra
