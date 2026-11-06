@@ -19,8 +19,6 @@
 package com.sevtinge.hyperceiler.libhook.rules.systemui.plugin
 
 import android.content.ContextWrapper
-import com.sevtinge.hyperceiler.common.log.XposedLog
-import com.sevtinge.hyperceiler.common.utils.PrefsBridge
 import com.sevtinge.hyperceiler.libhook.base.BaseHook
 import com.sevtinge.hyperceiler.libhook.rules.systemui.other.AutoSEffSwitchForSystemUi
 import com.sevtinge.hyperceiler.libhook.rules.systemui.other.AutoSEffSwitchForSystemUi.isSupportFW
@@ -42,6 +40,8 @@ import com.sevtinge.hyperceiler.libhook.rules.systemui.plugin.systemui.VolumeOrQ
 import com.sevtinge.hyperceiler.libhook.rules.systemui.statusbar.island.FocusNotifLyric
 import com.sevtinge.hyperceiler.libhook.utils.api.DeviceHelper.System.isMoreSmallVersion
 import com.sevtinge.hyperceiler.libhook.utils.hookapi.PluginFactory
+import com.sevtinge.hyperceiler.common.log.XposedLog
+import com.sevtinge.hyperceiler.common.utils.PrefsBridge
 import io.github.lingqiqi5211.ezhooktool.core.findMethod
 import io.github.lingqiqi5211.ezhooktool.core.loadClass
 import io.github.lingqiqi5211.ezhooktool.xposed.dsl.createAfterHook
@@ -73,11 +73,7 @@ object NewPluginHelperKt : BaseHook() {
                         isLoad.pluginCtxRef = WeakReference(wrapper)
                     })
                 }.onFailure {
-                    XposedLog.e(
-                        TAG,
-                        lpparam.packageName,
-                        "Failed to create plugin context.${it.message}"
-                    )
+                    XposedLog.e(TAG, lpparam.packageName, "Failed to create plugin context.")
                     return@createAfterHook
                 }
             }
