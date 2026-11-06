@@ -1,1 +1,0 @@
-package android.view;public class View{public android.graphics.drawable.Drawable background;public android.graphics.drawable.Drawable getBackground(){return background;}public void setBackground(android.graphics.drawable.Drawable d){background=d;}public float alpha=1,transitionAlpha=1;public int visibility; }

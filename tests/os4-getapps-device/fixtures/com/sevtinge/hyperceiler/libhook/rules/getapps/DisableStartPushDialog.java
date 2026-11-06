@@ -1,1 +1,0 @@
-package com.sevtinge.hyperceiler.libhook.rules.getapps;import com.sevtinge.hyperceiler.libhook.base.BaseHook;public class DisableStartPushDialog extends BaseHook{public static final DisableStartPushDialog INSTANCE=new DisableStartPushDialog(); public void init(){}}

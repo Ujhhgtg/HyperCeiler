@@ -1,2 +1,0 @@
-package android.content;import java.util.*;
-public interface SharedPreferences {Map<String,?> getAll(); default boolean contains(String k){throw new AssertionError("per-key read");}default String getString(String k,String d){throw new AssertionError("per-key read");}default int getInt(String k,int d){throw new AssertionError("per-key read");}default boolean getBoolean(String k,boolean d){throw new AssertionError("per-key read");}default Set<String> getStringSet(String k,Set<String>d){throw new AssertionError("per-key read");}}

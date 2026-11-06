@@ -1,1 +1,0 @@
-package android.os; public class Looper { public static final Looper MAIN=new Looper();public static ThreadLocal<Looper>local=ThreadLocal.withInitial(()->MAIN);public static Looper myLooper(){return local.get();}public static Looper getMainLooper(){return MAIN;} }

@@ -1,1 +1,0 @@
-package android.graphics.drawable;import android.graphics.Bitmap;public final class BitmapDrawable extends Drawable{public BitmapDrawable(Bitmap b){super(b);}public BitmapDrawable(android.content.res.Resources r,Bitmap b){super(b);}public Bitmap getBitmap(){return bitmap;}}
