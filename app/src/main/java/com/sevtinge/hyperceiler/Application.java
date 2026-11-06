@@ -22,7 +22,6 @@ import static android.os.Process.killProcess;
 
 import android.content.Context;
 import android.os.Process;
-import android.os.UserManager;
 
 import androidx.annotation.NonNull;
 
@@ -38,7 +37,6 @@ import com.sevtinge.hyperceiler.utils.DeviceInfoBuilder;
 import com.sevtinge.hyperceiler.utils.FrameworkStatusManager;
 import com.sevtinge.hyperceiler.utils.LSPosedScopeHelper;
 import com.sevtinge.hyperceiler.utils.ScopeManager;
-import com.sevtinge.hyperceiler.utils.XposedActivateHelper;
 
 import fan.provision.OobeUtils;
 import io.github.libxposed.service.XposedService;
@@ -48,7 +46,7 @@ public class Application extends fan.app.Application
     implements XposedServiceHelper.OnServiceListener {
 
     private static final String TAG = "Application";
-    public static volatile boolean isModuleActivated = false;
+    public static boolean isModuleActivated = false;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -61,7 +59,7 @@ public class Application extends fan.app.Application
         super.onCreate();
         // 应用启动阶段，预热非 UI 任务（如 Shell、语言包、权限检查）
         AppInitializer.initOnAppCreate(this);
-        syncHookAvailabilityIfUnlocked();
+        OobeUtils.syncHookAvailability(this);
         FrameworkStatusManager.init();
 
         LogManager.init(
@@ -78,7 +76,7 @@ public class Application extends fan.app.Application
         synchronized (this) {
             setModuleActivated(true);
             PrefsBridge.setRemotePrefs(service.getRemotePreferences(PrefsBridge.REMOTE_PREFS_GROUP));
-            syncHookAvailabilityIfUnlocked();
+            OobeUtils.syncHookAvailability(this);
             FrameworkStatusManager.onServiceBound(service);
             AndroidLog.d(TAG, "XposedService connected: " + describeFrameworkStatus());
             ScopeManager.setService(service);
@@ -102,17 +100,11 @@ public class Application extends fan.app.Application
     private static void setModuleActivated(boolean activated) {
         isModuleActivated = activated;
         PermissionSettingsFragment.isModuleActive = activated;
-        XposedActivateHelper.onActivationChanged();
     }
 
     private static void refreshHomePageBanner() {
         HomePageBannerManager.invalidateCache();
         HomePageBannerManager.requestRefresh();
-    }
-
-    private void syncHookAvailabilityIfUnlocked() {
-        UserManager users = getSystemService(UserManager.class);
-        if (users == null || users.isUserUnlocked()) OobeUtils.syncHookAvailability(this);
     }
 
     @NonNull

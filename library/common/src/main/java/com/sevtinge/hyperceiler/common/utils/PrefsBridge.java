@@ -176,11 +176,12 @@ public class PrefsBridge {
         if (!commitPut(mPhysicalPrefs, rKey, value, "physical")) {
             return;
         }
-        if (mRemotePrefs != null) {
-            commitPut(mRemotePrefs, rKey, value, "remote");
+        if (mRemotePrefs == null) {
+            return;
         }
-        // The provider reads the committed physical file. A missing/read-only remote endpoint
-        // must not hide a successful local write from system_server's provider observers.
+        if (!commitPut(mRemotePrefs, rKey, value, "remote")) {
+            return;
+        }
         notifyPrefChanged(rKey, prefType);
     }
 
@@ -201,8 +202,11 @@ public class PrefsBridge {
         if (!commitRemove(mPhysicalPrefs, rKey, "physical")) {
             return;
         }
-        if (mRemotePrefs != null) {
-            commitRemove(mRemotePrefs, rKey, "remote");
+        if (mRemotePrefs == null) {
+            return;
+        }
+        if (!commitRemove(mRemotePrefs, rKey, "remote")) {
+            return;
         }
         notifyPrefChanged(rKey, prefType);
     }

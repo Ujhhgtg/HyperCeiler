@@ -81,17 +81,9 @@ public class LogStatusManager {
 
                 // 检查日志服务存活状态
                 IS_LOGGER_ALIVE = LoggerHealthChecker.isLoggerAlive();
-            } catch (Throwable t) {
-                IS_LOGGER_ALIVE = false;
-                AndroidLog.e("LogStatusManager", "Log health check failed", t);
+                notifyListeners();
             } finally {
-                try {
-                    notifyListeners();
-                } catch (Throwable t) {
-                    AndroidLog.e("LogStatusManager", "Log health check listener failed", t);
-                } finally {
-                    healthCheckLatch.countDown();
-                }
+                healthCheckLatch.countDown();
             }
         }, "LogHealthCheck").start();
     }

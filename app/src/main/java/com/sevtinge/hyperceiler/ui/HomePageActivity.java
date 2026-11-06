@@ -43,7 +43,6 @@ import com.sevtinge.hyperceiler.settings.SettingsFragment;
 import com.sevtinge.hyperceiler.settings.SettingsPageFragment;
 import com.sevtinge.hyperceiler.utils.NoticeProcessor;
 import com.sevtinge.hyperceiler.utils.PersistConfig;
-import com.sevtinge.hyperceiler.utils.XposedActivateHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -188,12 +187,10 @@ public class HomePageActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         PageDecorator.onResume();
-        if (mContentAdapter != null) XposedActivateHelper.init(this);
     }
 
     @Override
     protected void onPause() {
-        XposedActivateHelper.clear(this);
         super.onPause();
         PageDecorator.onPause();
     }
@@ -208,7 +205,6 @@ public class HomePageActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
-        XposedActivateHelper.clear(this);
         super.onDestroy();
     }
 
